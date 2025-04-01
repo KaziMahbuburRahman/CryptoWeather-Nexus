@@ -3,12 +3,26 @@
 import { CryptoData } from "@/types/crypto";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 const cryptos = [
   { id: "bitcoin", name: "Bitcoin", symbol: "BTC" },
   { id: "ethereum", name: "Ethereum", symbol: "ETH" },
   { id: "cardano", name: "Cardano", symbol: "ADA" },
 ];
+
+const formatLargeNumber = (num: number): string => {
+  if (num >= 1000000000000) {
+    return `${(num / 1000000000000).toFixed(2)}T`;
+  }
+  if (num >= 1000000000) {
+    return `${(num / 1000000000).toFixed(2)}B`;
+  }
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(2)}M`;
+  }
+  return num.toLocaleString();
+};
 
 export default function CryptoSection() {
   const [cryptoData, setCryptoData] = useState<CryptoData[]>([]);
@@ -19,17 +33,25 @@ export default function CryptoSection() {
   useEffect(() => {
     const fetchCryptoData = async () => {
       try {
-        // TODO: Replace with actual API call
-        const mockData: CryptoData[] = cryptos.map((crypto) => ({
-          ...crypto,
-          price: Math.random() * 50000,
-          priceChange24h: Math.random() * 20 - 10,
-          marketCap: Math.random() * 1000000000000,
-          volume24h: Math.random() * 50000000000,
-          circulatingSupply: Math.random() * 21000000,
-          isFavorite: favorites.includes(crypto.id),
-        }));
-        setCryptoData(mockData);
+        const ids = cryptos.map(c => c.id).join(',');
+        const response = await axios.get(
+          `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true&include_last_updated_at=true`
+        );
+
+        const mappedData: CryptoData[] = cryptos.map((crypto) => {
+          const coinData = response.data[crypto.id];
+          return {
+            ...crypto,
+            price: coinData.usd,
+            priceChange24h: coinData.usd_24h_change,
+            marketCap: coinData.usd_market_cap,
+            volume24h: coinData.usd_24h_vol,
+            circulatingSupply: 0, // Not available in this endpoint
+            isFavorite: favorites.includes(crypto.id),
+          };
+        });
+
+        setCryptoData(mappedData);
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch crypto data");
@@ -104,19 +126,13 @@ export default function CryptoSection() {
                 <div>
                   <p>Market Cap</p>
                   <p className="font-medium">
-                    $
-                    {crypto.marketCap.toLocaleString(undefined, {
-                      maximumFractionDigits: 0,
-                    })}
+                    ${formatLargeNumber(crypto.marketCap)}
                   </p>
                 </div>
                 <div>
                   <p>24h Volume</p>
                   <p className="font-medium">
-                    $
-                    {crypto.volume24h.toLocaleString(undefined, {
-                      maximumFractionDigits: 0,
-                    })}
+                    ${formatLargeNumber(crypto.volume24h)}
                   </p>
                 </div>
               </div>
