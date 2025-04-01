@@ -1,9 +1,12 @@
 {
-  "name": "CryptoWeather-Nexus",
+  "name": "crypto-weather-nexus",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "next start",
+    "build": "next build",
+    "dev": "next dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,10 +15,10 @@
   "packageManager": "pnpm@10.6.2",
   "dependencies": {
     "@reduxjs/toolkit": "^2.6.1",
+    "@tailwindcss/postcss": "^4.0.17",
     "@types/node": "^22.13.16",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
-    "autoprefixer": "^10.4.21",
     "axios": "^1.8.4",
     "framer-motion": "^12.6.2",
     "next": "^15.2.4",

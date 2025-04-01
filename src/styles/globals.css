@@ -1,11 +1,45 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Primary Colors */
+    --color-primary-50: 240 249 255; /* Lighter blue */
+    --color-primary-100: 224 242 254;
+    --color-primary-200: 186 230 253;
+    --color-primary-300: 125 211 252;
+    --color-primary-400: 56 189 248;
+    --color-primary-500: 14 165 233;
+    --color-primary-600: 2 132 199; /* Main blue */
+    --color-primary-700: 3 105 161;
+    --color-primary-800: 7 89 133;
+    --color-primary-900: 12 74 110; /* Darker blue */
+    --color-primary-950: 8 47 73;
+
+    /* Secondary Colors */
+    --color-secondary-50: 240 253 244; /* Lighter green */
+    --color-secondary-100: 220 252 231;
+    --color-secondary-200: 187 247 208;
+    --color-secondary-300: 134 239 172;
+    --color-secondary-400: 74 222 128;
+    --color-secondary-500: 34 197 94;
+    --color-secondary-600: 22 163 74; /* Main green */
+    --color-secondary-700: 21 128 61;
+    --color-secondary-800: 22 101 52;
+    --color-secondary-900: 20 83 45; /* Darker green */
+    --color-secondary-950: 5 46 22;
+
+    /* Neutral Colors */
+    --color-neutral-50: 250 250 250;
+    --color-neutral-100: 245 245 245;
+    --color-neutral-200: 229 229 229;
+    --color-neutral-300: 212 212 212;
+    --color-neutral-400: 163 163 163;
+    --color-neutral-500: 115 115 115;
+    --color-neutral-600: 82 82 82;
+    --color-neutral-700: 64 64 64;
+    --color-neutral-800: 38 38 38;
+    --color-neutral-900: 23 23 23;
+    --color-neutral-950: 10 10 10;
   }
 
   body {
@@ -15,7 +49,7 @@
 
 @layer components {
   .card {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply rounded-lg shadow-md p-6 bg-[rgb(var(--color-neutral-50))];
   }
 
   .btn {
@@ -23,14 +57,47 @@
   }
 
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700;
+    @apply bg-[rgb(var(--color-primary-600))] 
+           text-[rgb(var(--color-neutral-50))] 
+           hover:bg-[rgb(var(--color-primary-700))];
   }
 
   .btn-secondary {
-    @apply bg-secondary-100 text-secondary-900 hover:bg-secondary-200;
+    @apply bg-[rgb(var(--color-secondary-600))] 
+           text-[rgb(var(--color-neutral-50))] 
+           hover:bg-[rgb(var(--color-secondary-700))];
   }
 
   .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+    @apply w-full px-3 py-2 border 
+           border-[rgb(var(--color-neutral-300))] 
+           rounded-md 
+           focus:outline-none 
+           focus:ring-2 
+           focus:ring-[rgb(var(--color-primary-500))] 
+           focus:border-transparent;
+  }
+}
+
+/* Custom utilities */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-primary {
+    color: rgb(var(--color-primary-600));
+  }
+
+  .text-secondary {
+    color: rgb(var(--color-secondary-600));
+  }
+
+  .bg-primary {
+    background-color: rgb(var(--color-primary-600));
+  }
+
+  .bg-secondary {
+    background-color: rgb(var(--color-secondary-600));
   }
 }
