@@ -1,11 +1,7 @@
 export interface WeatherData {
-  city: string;
   temperature: number;
-  humidity: number;
-  conditions: string;
-  icon: string;
-  windSpeed: number;
-  feelsLike: number;
+  condition: string;
+  location: string;
 }
 
 export interface WeatherState {
