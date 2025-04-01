@@ -6,12 +6,10 @@ export interface WeatherData {
   icon: string;
   windSpeed: number;
   feelsLike: number;
-  isFavorite?: boolean;
 }
 
 export interface WeatherState {
   data: WeatherData[];
   loading: boolean;
   error: string | null;
-  favorites: string[];
 }

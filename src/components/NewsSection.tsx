@@ -1,41 +1,12 @@
 "use client";
 
 import { NewsArticle } from "@/types/news";
+import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-const mockArticles: NewsArticle[] = [
-  {
-    id: "1",
-    title: "Bitcoin Surges Past $50,000 as Institutional Interest Grows",
-    description:
-      "Major financial institutions are showing increased interest in cryptocurrency investments, driving Bitcoin to new heights.",
-    url: "#",
-    source: "CryptoNews",
-    publishedAt: new Date().toISOString(),
-    imageUrl: "https://picsum.photos/seed/bitcoin/400/200",
-  },
-  {
-    id: "2",
-    title: "Ethereum 2.0 Upgrade Successfully Implemented",
-    description:
-      "The long-awaited upgrade to Ethereum network has been completed, promising improved scalability and energy efficiency.",
-    url: "#",
-    source: "TechCrypto",
-    publishedAt: new Date(Date.now() - 3600000).toISOString(),
-    imageUrl: "https://picsum.photos/seed/ethereum/400/200",
-  },
-  {
-    id: "3",
-    title: "New Regulatory Framework for Cryptocurrency Trading",
-    description:
-      "Global regulators are working together to establish a unified framework for cryptocurrency trading and investment.",
-    url: "#",
-    source: "FinanceDaily",
-    publishedAt: new Date(Date.now() - 7200000).toISOString(),
-    imageUrl: "https://picsum.photos/seed/regulation/400/200",
-  },
-];
+const API_KEY = process.env.NEXT_PUBLIC_NEWSDATA_API_KEY;
+const API_URL = `https://newsdata.io/api/1/latest?apikey=${API_KEY}&q=cryptocurrency`;
 
 export default function NewsSection() {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
@@ -45,8 +16,20 @@ export default function NewsSection() {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        // TODO: Replace with actual API call
-        setArticles(mockArticles);
+        const response = await axios.get(API_URL);
+        const newsArticles = response.data.results
+          .slice(0, 5) // Only take top 5 articles
+          .map((article: any) => ({
+            id: article.article_id,
+            title: article.title,
+            description: article.description,
+            url: article.link,
+            source: article.source_name,
+            publishedAt: article.pubDate,
+            imageUrl:
+              article.image_url || "https://picsum.photos/seed/default/400/200",
+          }));
+        setArticles(newsArticles);
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch news articles");
