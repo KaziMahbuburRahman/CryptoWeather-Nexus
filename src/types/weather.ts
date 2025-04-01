@@ -1,11 +1,17 @@
 export interface WeatherData {
+  city: string;
   temperature: number;
-  condition: string;
-  location: string;
+  humidity: number;
+  conditions: string;
+  icon: string;
+  windSpeed: number;
+  feelsLike: number;
+  isFavorite?: boolean;
 }
 
 export interface WeatherState {
   data: WeatherData[];
   loading: boolean;
   error: string | null;
+  favorites: string[];
 }

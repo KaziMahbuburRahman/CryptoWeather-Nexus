@@ -7,6 +7,7 @@ export interface NewsArticle {
   source: {
     name: string;
   };
+  imageUrl?: string;
 }
 
 export interface NewsState {
