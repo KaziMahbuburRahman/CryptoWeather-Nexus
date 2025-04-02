@@ -1,12 +1,13 @@
-import { CryptoData } from "@/types/crypto";
-import { WeatherData } from "@/types/weather";
+import { CryptoData, WeatherData } from "@/types";
+import { Notification } from "@/types/notifications";
 
 type WebSocketCallback = {
   onCryptoUpdate?: (data: CryptoData) => void;
-  onWeatherAlert?: (data: WeatherData) => void;
+  onWeatherUpdate?: (data: WeatherData) => void;
+  onNotification?: (notification: Notification) => void;
 };
 
-class WebSocketService {
+export class WebSocketService {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -47,7 +48,7 @@ class WebSocketService {
         console.error("WebSocket error:", error);
       };
     } catch (error) {
-      console.error("Error creating WebSocket connection:", error);
+      console.error("Error creating WebSocket:", error);
       this.handleReconnect();
     }
   }
@@ -86,15 +87,34 @@ class WebSocketService {
             circulatingSupply: 0,
             isFavorite: false,
           });
+
+          // Generate price alert notification for significant changes
+          this.generatePriceAlert(id, price);
         }
       });
     }
   }
 
-  // Simulate weather alerts
-  public simulateWeatherAlert(weatherData: WeatherData) {
-    if (this.callbacks.onWeatherAlert) {
-      this.callbacks.onWeatherAlert(weatherData);
+  private generatePriceAlert(id: string, currentPrice: number) {
+    // Simulate price alerts for significant changes
+    const threshold = 0.02; // 2% change threshold
+    const randomChange = (Math.random() - 0.5) * 2 * threshold;
+
+    if (Math.abs(randomChange) > threshold) {
+      const notification: Notification = {
+        id: `price_${Date.now()}`,
+        type: "price_alert",
+        title: `${id.charAt(0).toUpperCase() + id.slice(1)} Price Alert`,
+        message: `${id.charAt(0).toUpperCase() + id.slice(1)} has ${
+          randomChange > 0 ? "increased" : "decreased"
+        } by ${Math.abs(randomChange * 100).toFixed(2)}%`,
+        timestamp: Date.now(),
+        read: false,
+      };
+
+      if (this.callbacks.onNotification) {
+        this.callbacks.onNotification(notification);
+      }
     }
   }
 

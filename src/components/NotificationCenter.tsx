@@ -1,5 +1,6 @@
 "use client";
 
+import { websocketService } from "@/services/websocket";
 import { Notification, NotificationType } from "@/types/notifications";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -10,27 +11,18 @@ export default function NotificationCenter() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    // TODO: Replace with actual WebSocket subscription
-    const mockNotifications: Notification[] = [
-      {
-        id: "1",
-        type: "price_alert",
-        title: "Bitcoin Price Alert",
-        message: "Bitcoin has increased by 5% in the last hour",
-        timestamp: Date.now(),
-        read: false,
+    // Set up WebSocket callbacks
+    websocketService.setCallbacks({
+      onNotification: (notification) => {
+        setNotifications((prev) => [notification, ...prev]);
+        setUnreadCount((prev) => prev + 1);
       },
-      {
-        id: "2",
-        type: "weather_alert",
-        title: "Weather Alert",
-        message: "Heavy rain expected in New York",
-        timestamp: Date.now() - 3600000,
-        read: false,
-      },
-    ];
-    setNotifications(mockNotifications);
-    setUnreadCount(mockNotifications.filter((n) => !n.read).length);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      websocketService.setCallbacks({});
+    };
   }, []);
 
   const markAsRead = (id: string) => {
