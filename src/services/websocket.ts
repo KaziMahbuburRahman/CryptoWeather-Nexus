@@ -35,7 +35,7 @@ export class WebSocketService {
           const data = JSON.parse(event.data);
           this.handleCryptoUpdate(data);
         } catch (error) {
-          console.error("Error parsing WebSocket message:", error);
+          console.log("Error parsing WebSocket message:", error);
         }
       };
 
@@ -45,10 +45,10 @@ export class WebSocketService {
       };
 
       this.ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
+        console.log("WebSocket error:", error);
       };
     } catch (error) {
-      console.error("Error creating WebSocket:", error);
+      console.log("Error creating WebSocket:", error);
       this.handleReconnect();
     }
   }
@@ -61,7 +61,7 @@ export class WebSocketService {
       );
       setTimeout(() => this.connect(), this.reconnectTimeout);
     } else {
-      console.error("Max reconnection attempts reached");
+      console.log("Max reconnection attempts reached");
     }
   }
 
