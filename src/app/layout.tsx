@@ -1,4 +1,4 @@
-import NotificationCenter from "@/components/NotificationCenter";
+import Navbar from "@/components/Navbar";
 import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -22,14 +22,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           <div className="min-h-screen bg-gray-50">
-            <header className="bg-white shadow-sm">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  CryptoWeather Nexus
-                </h1>
-                <NotificationCenter />
-              </div>
-            </header>
+            <Navbar />
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               {children}
             </main>
