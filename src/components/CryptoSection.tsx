@@ -1,9 +1,10 @@
 "use client";
 
+import { websocketService } from "@/services/websocket";
 import { CryptoData } from "@/types/crypto";
-import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
 import axios from "axios";
+import { AnimatePresence, motion } from "framer-motion";
+import { useCallback, useEffect, useState } from "react";
 
 const cryptos = [
   { id: "bitcoin", name: "Bitcoin", symbol: "BTC" },
@@ -30,39 +31,63 @@ export default function CryptoSection() {
   const [error, setError] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
 
-  useEffect(() => {
-    const fetchCryptoData = async () => {
-      try {
-        const ids = cryptos.map(c => c.id).join(',');
-        const response = await axios.get(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true&include_last_updated_at=true`
-        );
+  const fetchInitialData = useCallback(async () => {
+    try {
+      const ids = cryptos.map((c) => c.id).join(",");
+      const response = await axios.get(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true&include_last_updated_at=true`
+      );
 
-        const mappedData: CryptoData[] = cryptos.map((crypto) => {
-          const coinData = response.data[crypto.id];
-          return {
-            ...crypto,
-            price: coinData.usd,
-            priceChange24h: coinData.usd_24h_change,
-            marketCap: coinData.usd_market_cap,
-            volume24h: coinData.usd_24h_vol,
-            circulatingSupply: 0, // Not available in this endpoint
-            isFavorite: favorites.includes(crypto.id),
-          };
-        });
+      const mappedData: CryptoData[] = cryptos.map((crypto) => {
+        const coinData = response.data[crypto.id];
+        return {
+          ...crypto,
+          price: coinData.usd,
+          priceChange24h: coinData.usd_24h_change,
+          marketCap: coinData.usd_market_cap,
+          volume24h: coinData.usd_24h_vol,
+          circulatingSupply: 0, // Not available in this endpoint
+          isFavorite: favorites.includes(crypto.id),
+        };
+      });
 
-        setCryptoData(mappedData);
-        setLoading(false);
-      } catch (err) {
-        setError("Failed to fetch crypto data");
-        setLoading(false);
-      }
-    };
-
-    fetchCryptoData();
-    const interval = setInterval(fetchCryptoData, 60000); // Refresh every minute
-    return () => clearInterval(interval);
+      setCryptoData(mappedData);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching initial crypto data:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch crypto data"
+      );
+    } finally {
+      setLoading(false);
+    }
   }, [favorites]);
+
+  useEffect(() => {
+    fetchInitialData();
+
+    // Set up WebSocket callbacks
+    websocketService.setCallbacks({
+      onCryptoUpdate: (update) => {
+        setCryptoData((prev) =>
+          prev.map((crypto) =>
+            crypto.id === update.id
+              ? {
+                  ...crypto,
+                  price: update.price,
+                  priceChange24h: crypto.priceChange24h,
+                }
+              : crypto
+          )
+        );
+      },
+    });
+
+    // Cleanup
+    return () => {
+      websocketService.setCallbacks({});
+    };
+  }, [fetchInitialData]);
 
   const toggleFavorite = (id: string) => {
     setFavorites((prev) =>
@@ -70,9 +95,36 @@ export default function CryptoSection() {
     );
   };
 
-  if (loading) return <div className="card animate-pulse h-64"></div>;
-  if (error)
-    return <div className="card bg-red-50 text-red-500 p-4">{error}</div>;
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold text-gray-900">Crypto Market</h2>
+        <div className="grid gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card animate-pulse h-64"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold text-gray-900">Crypto Market</h2>
+        <div className="card bg-red-50 text-red-500 p-4">
+          <p className="font-medium">Error loading crypto data</p>
+          <p className="text-sm mt-1">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 text-sm underline hover:text-red-600"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <section className="space-y-4">
@@ -106,9 +158,13 @@ export default function CryptoSection() {
                 <div className="text-right">
                   <p className="text-2xl font-bold text-gray-900">
                     $
-                    {crypto.price.toLocaleString(undefined, {
-                      maximumFractionDigits: 2,
-                    })}
+                    {crypto.symbol === "ADA"
+                      ? crypto.price.toLocaleString(undefined, {
+                          maximumFractionDigits: 4,
+                        })
+                      : crypto.price.toLocaleString(undefined, {
+                          maximumFractionDigits: 2,
+                        })}
                   </p>
                   <p
                     className={`text-sm ${

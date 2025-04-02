@@ -1,11 +1,17 @@
-import { CryptoWebSocketMessage } from "@/types/crypto";
+import { CryptoData } from "@/types/crypto";
+import { WeatherData } from "@/types/weather";
+
+type WebSocketCallback = {
+  onCryptoUpdate?: (data: CryptoData) => void;
+  onWeatherAlert?: (data: WeatherData) => void;
+};
 
 class WebSocketService {
-  private socket: WebSocket | null = null;
+  private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
-  private reconnectDelay = 1000;
-  private messageHandlers: ((message: CryptoWebSocketMessage) => void)[] = [];
+  private reconnectTimeout = 3000;
+  private callbacks: WebSocketCallback = {};
 
   constructor() {
     this.connect();
@@ -13,32 +19,32 @@ class WebSocketService {
 
   private connect() {
     try {
-      // TODO: Replace with actual WebSocket URL
-      this.socket = new WebSocket("wss://api.coincap.io/v2/ws");
+      // Connect to CoinCap WebSocket
+      this.ws = new WebSocket(
+        "wss://ws.coincap.io/prices?assets=bitcoin,ethereum,cardano"
+      );
 
-      this.socket.onopen = () => {
+      this.ws.onopen = () => {
         console.log("WebSocket connected");
         this.reconnectAttempts = 0;
-        this.subscribe();
       };
 
-      this.socket.onmessage = (event) => {
+      this.ws.onmessage = (event) => {
         try {
-          const message = JSON.parse(event.data) as CryptoWebSocketMessage;
-          this.messageHandlers.forEach((handler) => handler(message));
+          const data = JSON.parse(event.data);
+          this.handleCryptoUpdate(data);
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
         }
       };
 
-      this.socket.onclose = () => {
+      this.ws.onclose = () => {
         console.log("WebSocket disconnected");
         this.handleReconnect();
       };
 
-      this.socket.onerror = (error) => {
+      this.ws.onerror = (error) => {
         console.error("WebSocket error:", error);
-        this.handleReconnect();
       };
     } catch (error) {
       console.error("Error creating WebSocket connection:", error);
@@ -52,38 +58,54 @@ class WebSocketService {
       console.log(
         `Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`
       );
-      setTimeout(
-        () => this.connect(),
-        this.reconnectDelay * this.reconnectAttempts
-      );
+      setTimeout(() => this.connect(), this.reconnectTimeout);
     } else {
       console.error("Max reconnection attempts reached");
     }
   }
 
-  private subscribe() {
-    if (this.socket?.readyState === WebSocket.OPEN) {
-      const subscribeMessage = {
-        type: "subscribe",
-        channels: ["prices"],
-      };
-      this.socket.send(JSON.stringify(subscribeMessage));
+  private handleCryptoUpdate(data: any) {
+    if (this.callbacks.onCryptoUpdate) {
+      Object.entries(data).forEach(([id, priceData]: [string, any]) => {
+        // CoinCap WebSocket sends price directly as a number
+        const price = parseFloat(priceData);
+        if (!isNaN(price)) {
+          this.callbacks.onCryptoUpdate({
+            id,
+            price,
+            // Don't update priceChange24h from WebSocket, keep existing value
+            priceChange24h: 0,
+            // Other fields will be updated from REST API
+            name:
+              id === "cardano"
+                ? "Cardano"
+                : id.charAt(0).toUpperCase() + id.slice(1),
+            symbol: id === "cardano" ? "ADA" : id.toUpperCase(),
+            marketCap: 0,
+            volume24h: 0,
+            circulatingSupply: 0,
+            isFavorite: false,
+          });
+        }
+      });
     }
   }
 
-  public subscribeToUpdates(
-    handler: (message: CryptoWebSocketMessage) => void
-  ) {
-    this.messageHandlers.push(handler);
-    return () => {
-      this.messageHandlers = this.messageHandlers.filter((h) => h !== handler);
-    };
+  // Simulate weather alerts
+  public simulateWeatherAlert(weatherData: WeatherData) {
+    if (this.callbacks.onWeatherAlert) {
+      this.callbacks.onWeatherAlert(weatherData);
+    }
+  }
+
+  public setCallbacks(callbacks: WebSocketCallback) {
+    this.callbacks = callbacks;
   }
 
   public disconnect() {
-    if (this.socket) {
-      this.socket.close();
-      this.socket = null;
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
     }
   }
 }
