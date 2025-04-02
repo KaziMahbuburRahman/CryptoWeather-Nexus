@@ -35,7 +35,7 @@ export default function CryptoSection() {
     try {
       const ids = cryptos.map((c) => c.id).join(",");
       const response = await axios.get(
-        `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true&include_last_updated_at=true`
+        `${process.env.NEXT_PUBLIC_COINGECKO_API_URL}/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true&include_last_updated_at=true`
       );
 
       const mappedData: CryptoData[] = cryptos.map((crypto) => {
