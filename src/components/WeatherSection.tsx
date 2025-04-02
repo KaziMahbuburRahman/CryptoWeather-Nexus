@@ -14,17 +14,27 @@ export default function WeatherSection() {
   useEffect(() => {
     const fetchWeatherData = async () => {
       try {
-        // TODO: Replace with actual API call
-        const mockData: WeatherData[] = cities.map((city) => ({
-          city,
-          temperature: Math.round(Math.random() * 30),
-          humidity: Math.round(Math.random() * 100),
-          conditions: "Sunny",
-          icon: "01d",
-          windSpeed: Math.round(Math.random() * 20),
-          feelsLike: Math.round(Math.random() * 30),
-        }));
-        setWeatherData(mockData);
+        const weatherPromises = cities.map(async (city) => {
+          const response = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY}&units=metric`
+          );
+          if (!response.ok) {
+            throw new Error(`Failed to fetch weather for ${city}`);
+          }
+          const data = await response.json();
+          return {
+            city,
+            temperature: Math.round(data.main.temp),
+            humidity: data.main.humidity,
+            conditions: data.weather[0].main,
+            icon: data.weather[0].icon,
+            windSpeed: Math.round(data.wind.speed),
+            feelsLike: Math.round(data.main.feels_like),
+          };
+        });
+
+        const weatherData = await Promise.all(weatherPromises);
+        setWeatherData(weatherData);
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch weather data");
