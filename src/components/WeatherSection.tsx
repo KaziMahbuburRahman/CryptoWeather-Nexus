@@ -1,13 +1,19 @@
 "use client";
 
-import { WeatherData } from "@/types/weather";
+import {
+  setWeatherData,
+  toggleFavorite,
+} from "@/features/weather/weatherSlice";
+import { RootState } from "@/store";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 const cities = ["New York", "London", "Tokyo"];
 
 export default function WeatherSection() {
-  const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
+  const dispatch = useDispatch();
+  const weatherData = useSelector((state: RootState) => state.weather.data);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,8 +39,8 @@ export default function WeatherSection() {
           };
         });
 
-        const weatherData = await Promise.all(weatherPromises);
-        setWeatherData(weatherData);
+        const data = await Promise.all(weatherPromises);
+        dispatch(setWeatherData(data));
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch weather data");
@@ -45,7 +51,11 @@ export default function WeatherSection() {
     fetchWeatherData();
     const interval = setInterval(fetchWeatherData, 60000); // Refresh every minute
     return () => clearInterval(interval);
-  }, []);
+  }, [dispatch]);
+
+  const handleToggleFavorite = (city: string) => {
+    dispatch(toggleFavorite(city));
+  };
 
   if (loading) return <div className="card animate-pulse h-64"></div>;
   if (error)
@@ -65,9 +75,17 @@ export default function WeatherSection() {
           >
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  {data.city}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {data.city}
+                  </h3>
+                  <button
+                    onClick={() => handleToggleFavorite(data.city)}
+                    className="text-yellow-500 hover:text-yellow-600 transition-colors"
+                  >
+                    {data.isFavorite ? "★" : "☆"}
+                  </button>
+                </div>
                 <p className="text-3xl font-bold text-gray-900 mt-2">
                   {data.temperature}°C
                 </p>
