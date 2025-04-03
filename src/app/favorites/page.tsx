@@ -1,23 +1,44 @@
 "use client";
 
-import { RootState } from "@/store";
+import CryptoSection from "@/components/CryptoSection";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export default function FavoritesPage() {
+  const [favoriteCryptos, setFavoriteCryptos] = useState<Array<{id: string, name: string, symbol: string}>>([]);
   const weatherFavorites = useSelector(
     (state: RootState) => state.weather.favorites
   );
   const weatherData = useSelector((state: RootState) => state.weather.data);
-  const cryptoFavorites = useSelector(
-    (state: RootState) => state.crypto.favorites
-  );
-  const cryptoData = useSelector((state: RootState) => state.crypto.data);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedCryptos = localStorage.getItem('cryptoFavorites');
+      const cryptoIds = savedCryptos ? JSON.parse(savedCryptos) : [];
+      
+      // For now just using default mapping, in production you'd want to fetch full crypto details
+      const cryptoDetails = cryptoIds.map((id: string) => {
+        switch(id) {
+          case 'bitcoin':
+            return { id: 'bitcoin', name: 'Bitcoin', symbol: 'BTC' };
+          case 'ethereum':
+            return { id: 'ethereum', name: 'Ethereum', symbol: 'ETH' };
+          case 'cardano':
+            return { id: 'cardano', name: 'Cardano', symbol: 'ADA' };
+          default:
+            return { id, name: id, symbol: id.toUpperCase() };
+        }
+      });
+      
+      setFavoriteCryptos(cryptoDetails);
+    }
+  }, []);
 
   const favoriteWeatherLocations = weatherData.filter(
     (weather) => weather.isFavorite
   );
-  const favoriteCryptos = cryptoData.filter((crypto) => crypto.isFavorite);
 
   return (
     <div className="space-y-8">
@@ -28,46 +49,7 @@ export default function FavoritesPage() {
         <h3 className="text-xl font-semibold text-gray-800 mb-4">
           Starred Cryptocurrencies
         </h3>
-        <div className="grid gap-4">
-          {favoriteCryptos.length > 0 ? (
-            favoriteCryptos.map((crypto) => (
-              <motion.div
-                key={crypto.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="card hover:shadow-lg transition-shadow"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900">
-                      {crypto.name}
-                    </h4>
-                    <p className="text-gray-600">{crypto.symbol}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900">
-                      ${crypto.price.toLocaleString()}
-                    </p>
-                    <p
-                      className={`text-sm ${
-                        crypto.priceChange24h >= 0
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {crypto.priceChange24h >= 0 ? "↑" : "↓"}
-                      {Math.abs(crypto.priceChange24h).toFixed(2)}%
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ))
-          ) : (
-            <div className="card bg-gray-50 p-6">
-              <p className="text-gray-500">No starred cryptocurrencies yet.</p>
-            </div>
-          )}
-        </div>
+        <CryptoSection cryptos={favoriteCryptos} />
       </section>
 
       {/* Weather Locations Section */}
