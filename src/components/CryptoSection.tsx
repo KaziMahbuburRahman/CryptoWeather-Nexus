@@ -168,7 +168,8 @@ export default function CryptoSection({ cryptos = defaultCryptos }: CryptoSectio
                     </h3>
                     <button
                       onClick={() => toggleFavorite(crypto.id)}
-                      className="text-yellow-500 hover:text-yellow-600 transition-colors"
+                      className="text-yellow-500 hover:text-yellow-600 transition-colors text-2xl p-2"
+                      aria-label={favorites.includes(crypto.id) ? "Remove from favorites" : "Add to favorites"}
                     >
                       {favorites.includes(crypto.id) ? "★" : "☆"}
                     </button>
