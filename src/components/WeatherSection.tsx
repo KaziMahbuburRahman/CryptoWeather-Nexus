@@ -81,7 +81,7 @@ export default function WeatherSection() {
                   </h3>
                   <button
                     onClick={() => handleToggleFavorite(data.city)}
-                    className="text-yellow-500 hover:text-yellow-600 transition-colors"
+                    className="text-yellow-500 hover:text-yellow-600 transition-colors text-2xl p-2"
                   >
                     {data.isFavorite ? "★" : "☆"}
                   </button>
