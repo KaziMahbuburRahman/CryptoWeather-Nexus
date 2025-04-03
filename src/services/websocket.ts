@@ -1,5 +1,6 @@
-import { CryptoData, WeatherData } from "@/types";
+import { CryptoData } from "@/types/crypto";
 import { Notification } from "@/types/notifications";
+import { WeatherData } from "@/types/weather";
 
 type WebSocketCallback = {
   onCryptoUpdate?: (data: CryptoData) => void;
@@ -66,12 +67,13 @@ export class WebSocketService {
   }
 
   private handleCryptoUpdate(data: any) {
-    if (this.callbacks.onCryptoUpdate) {
+    const onCryptoUpdate = this.callbacks.onCryptoUpdate;
+    if (onCryptoUpdate) {
       Object.entries(data).forEach(([id, priceData]: [string, any]) => {
         // CoinCap WebSocket sends price directly as a number
         const price = parseFloat(priceData);
         if (!isNaN(price)) {
-          this.callbacks.onCryptoUpdate({
+          onCryptoUpdate({
             id,
             price,
             // Don't update priceChange24h from WebSocket, keep existing value

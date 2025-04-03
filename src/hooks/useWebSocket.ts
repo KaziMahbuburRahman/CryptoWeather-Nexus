@@ -9,9 +9,21 @@ export function useWebSocket(
   const handleMessage = useCallback(onMessage, dependencies);
 
   useEffect(() => {
-    const unsubscribe = websocketService.subscribeToUpdates(handleMessage);
+    websocketService.setCallbacks({
+      onCryptoUpdate: (data) => {
+        handleMessage({
+          type: "price_update",
+          data: {
+            id: data.id,
+            price: data.price,
+            priceChange24h: data.priceChange24h,
+          },
+        });
+      },
+    });
+
     return () => {
-      unsubscribe();
+      websocketService.setCallbacks({});
     };
   }, [handleMessage]);
 

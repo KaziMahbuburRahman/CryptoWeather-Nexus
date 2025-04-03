@@ -3,7 +3,8 @@ import {
   setLoading,
   setWeatherData,
 } from "@/features/weather/weatherSlice";
-import { WeatherData, weatherService } from "@/services";
+import { weatherService } from "@/services";
+import { WeatherData } from "@/types/weather";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
@@ -16,7 +17,7 @@ export const useWeather = (location: string) => {
       try {
         dispatch(setLoading(true));
         const weatherData = await weatherService.getWeather(location);
-        dispatch(setWeatherData(weatherData));
+        dispatch(setWeatherData([weatherData]));
         setData(weatherData);
       } catch (err) {
         const error =
@@ -32,5 +33,5 @@ export const useWeather = (location: string) => {
     }
   }, [location, dispatch]);
 
-  return data;
+  return { data };
 };

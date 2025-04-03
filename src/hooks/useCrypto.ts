@@ -3,7 +3,8 @@ import {
   setError,
   setLoading,
 } from "@/features/crypto/cryptoSlice";
-import { CryptoData, cryptoService } from "@/services";
+import { cryptoService } from "@/services";
+import { CryptoData } from "@/types/crypto";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
