@@ -6,7 +6,15 @@ import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 
-const cryptos = [
+type CryptoSectionProps = {
+  cryptos?: Array<{
+    id: string;
+    name: string;
+    symbol: string;
+  }>;
+};
+
+const defaultCryptos = [
   { id: "bitcoin", name: "Bitcoin", symbol: "BTC" },
   { id: "ethereum", name: "Ethereum", symbol: "ETH" },
   { id: "cardano", name: "Cardano", symbol: "ADA" },
@@ -25,11 +33,17 @@ const formatLargeNumber = (num: number): string => {
   return num.toLocaleString();
 };
 
-export default function CryptoSection() {
+export default function CryptoSection({ cryptos = defaultCryptos }: CryptoSectionProps) {
   const [cryptoData, setCryptoData] = useState<CryptoData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('cryptoFavorites');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
 
   const fetchInitialData = useCallback(async () => {
     try {
@@ -61,7 +75,7 @@ export default function CryptoSection() {
     } finally {
       setLoading(false);
     }
-  }, [favorites]);
+  }, [favorites, cryptos]);
 
   useEffect(() => {
     fetchInitialData();
@@ -90,9 +104,15 @@ export default function CryptoSection() {
   }, [fetchInitialData]);
 
   const toggleFavorite = (id: string) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((fav) => fav !== id) : [...prev, id]
-    );
+    setFavorites((prev) => {
+      const newFavorites = prev.includes(id) 
+        ? prev.filter((fav) => fav !== id) 
+        : [...prev, id];
+      
+      localStorage.setItem('cryptoFavorites', JSON.stringify(newFavorites));
+      console.log('Updated favorites:', newFavorites);
+      return newFavorites;
+    });
   };
 
   if (loading) {
